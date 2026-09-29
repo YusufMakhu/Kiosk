@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#f6f3ec">
+  <title>Klassenkiosk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/kiosk.css">
+</head>
+<body>
+  <div id="app" data-screen="sell">
+
+    <!-- ═══════════ KOPFZEILE ═══════════ -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">🏪</span>
+        <span class="brand-name">Klassenkiosk</span>
+      </div>
+
+      <ol class="stepper" id="stepper" aria-label="Schritte">
+        <li data-step="1"><span class="step-num">1</span><span class="step-icon" aria-hidden="true">🛒</span><span class="step-label">Aussuchen</span></li>
+        <li data-step="2"><span class="step-num">2</span><span class="step-icon" aria-hidden="true">💶</span><span class="step-label">Bezahlen</span></li>
+        <li data-step="3"><span class="step-num">3</span><span class="step-icon" aria-hidden="true">🪙</span><span class="step-label">Rückgeld</span></li>
+      </ol>
+
+      <div class="topbar-actions">
+        <button class="icon-btn" id="speechToggle" aria-pressed="true" title="Vorlesen an/aus">
+          <span aria-hidden="true">🔊</span><span class="icon-btn-label">Vorlesen</span>
+        </button>
+        <button class="icon-btn" id="teacherBtn" title="Lehrerbereich">
+          <span aria-hidden="true">🔒</span><span class="icon-btn-label">Lehrer</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════════ VERKAUF (Schüler) ═══════════ -->
+    <main id="screen-sell" class="screen">
+
+      <!-- SCHRITT 1: Aussuchen -->
+      <section class="step" id="step-1" data-step="1">
+        <div class="hint">
+          <span class="hint-icon" aria-hidden="true">👆</span>
+          <p class="hint-text" id="hint-1">Tippe auf die Sachen, die der Kunde kaufen möchte.</p>
+          <button class="speak-btn" data-speak-hint="1" aria-label="Vorlesen">🔊</button>
+        </div>
+
+        <div class="sell-layout">
+          <div class="products-grid" id="productsGrid"></div>
+
+          <aside class="cart-panel" aria-label="Warenkorb">
+            <h2 class="cart-title"><span aria-hidden="true">🛒</span> Korb</h2>
+            <ul class="cart-list" id="cartList"></ul>
+            <div class="cart-total-box">
+              <span class="cart-total-label">Zusammen</span>
+              <span class="cart-total" id="cartTotal">0,00 €</span>
+            </div>
+            <div class="cart-buttons">
+              <button class="btn btn-quiet" id="clearCartBtn" disabled>
+                <span aria-hidden="true">🗑️</span> Alles weg
+              </button>
+              <button class="btn btn-go btn-xl" id="toPayBtn" disabled>
+                Bezahlen <span aria-hidden="true">➜</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- SCHRITT 2: Bezahlen -->
+      <section class="step" id="step-2" data-step="2" hidden>
+        <div class="hint">
+          <span class="hint-icon" aria-hidden="true">💶</span>
+          <p class="hint-text" id="hint-2">Tippe auf das Geld, das du vom Kunden bekommst.</p>
+          <button class="speak-btn" data-speak-hint="2" aria-label="Vorlesen">🔊</button>
+        </div>
+
+        <div class="pay-layout">
+          <div class="pay-summary">
+            <div class="amount-card amount-due">
+              <span class="amount-label">Kunde muss zahlen</span>
+              <span class="amount-value" id="dueAmount">0,00 €</span>
+            </div>
+            <div class="amount-card amount-given">
+              <span class="amount-label">Du hast bekommen</span>
+              <span class="amount-value" id="givenAmount">0,00 €</span>
+            </div>
+            <div class="pay-status" id="payStatus" role="status" aria-live="polite"></div>
+            <div class="pay-meter" aria-hidden="true"><div class="pay-meter-fill" id="payMeter"></div></div>
+
+            <div class="given-tray" id="givenTray" aria-label="Bekommenes Geld – antippen zum Entfernen"></div>
+          </div>
+
+          <div class="pay-input">
+            <div class="money-pad" id="moneyPad" aria-label="Geld auswählen"></div>
+            <div class="num-pad" id="numPad" hidden>
+              <div class="num-display" id="numDisplay">0,00 €</div>
+              <div class="num-keys" id="numKeys"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-footer">
+          <button class="btn btn-back" data-go-step="1"><span aria-hidden="true">⬅</span> Zurück</button>
+          <button class="btn btn-quiet" id="exactBtn"><span aria-hidden="true">👌</span> Passend</button>
+          <button class="btn btn-quiet" id="undoMoneyBtn" disabled><span aria-hidden="true">↩️</span> Rückgängig</button>
+          <button class="btn btn-go btn-xl" id="toChangeBtn" disabled>Weiter <span aria-hidden="true">➜</span></button>
+        </div>
+      </section>
+
+      <!-- SCHRITT 3: Rückgeld -->
+      <section class="step" id="step-3" data-step="3" hidden>
+        <div class="hint">
+          <span class="hint-icon" aria-hidden="true">🪙</span>
+          <p class="hint-text" id="hint-3">Gib dem Kunden das Rückgeld.</p>
+          <button class="speak-btn" data-speak-hint="3" aria-label="Vorlesen">🔊</button>
+        </div>
+
+        <div class="change-layout">
+          <div class="amount-card amount-change">
+            <span class="amount-label">Rückgeld</span>
+            <span class="amount-value" id="changeAmount">0,00 €</span>
+          </div>
+          <p class="change-instruction" id="changeInstruction"></p>
+          <div class="change-money" id="changeMoney"></div>
+          <div class="change-math" id="changeMath"></div>
+        </div>
+
+        <div class="step-footer">
+          <button class="btn btn-back" data-go-step="2"><span aria-hidden="true">⬅</span> Zurück</button>
+          <button class="btn btn-go btn-xl" id="finishBtn">
+            <span aria-hidden="true">✅</span> Fertig – nächster Kunde
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- ═══════════ LEHRERBEREICH ═══════════ -->
+    <main id="screen-teacher" class="screen" hidden>
+      <nav class="teacher-tabs" role="tablist">
+        <button class="tab active" data-tab="overview" role="tab"><span aria-hidden="true">📊</span> Übersicht</button>
+        <button class="tab" data-tab="history" role="tab"><span aria-hidden="true">📜</span> Verlauf</button>
+        <button class="tab" data-tab="products" role="tab"><span aria-hidden="true">📦</span> Produkte</button>
+        <button class="tab" data-tab="shopping" role="tab"><span aria-hidden="true">📋</span> Einkauf</button>
+        <button class="tab" data-tab="settings" role="tab"><span aria-hidden="true">⚙️</span> Einstellungen</button>
+        <button class="tab tab-exit" id="exitTeacherBtn"><span aria-hidden="true">⬅</span> Zum Verkauf</button>
+      </nav>
+
+      <!-- Übersicht -->
+      <section class="panel" id="panel-overview">
+        <div class="stats-grid">
+          <div class="stat"><span class="stat-icon" aria-hidden="true">💰</span><span class="stat-value" id="statRevenue">0,00 €</span><span class="stat-label">Einnahmen heute</span></div>
+          <div class="stat"><span class="stat-icon" aria-hidden="true">🧾</span><span class="stat-value" id="statSales">0</span><span class="stat-label">Verkäufe heute</span></div>
+          <div class="stat"><span class="stat-icon" aria-hidden="true">📦</span><span class="stat-value" id="statItems">0</span><span class="stat-label">Artikel heute</span></div>
+          <div class="stat"><span class="stat-icon" aria-hidden="true">📈</span><span class="stat-value" id="statAvg">0,00 €</span><span class="stat-label">Ø pro Verkauf</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>Einnahmen</h3>
+            <div class="segmented">
+              <button class="seg active" data-period="7">7 Tage</button>
+              <button class="seg" data-period="30">30 Tage</button>
+            </div>
+          </div>
+          <div class="chart" id="revenueChart"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Beliebteste Produkte</h3></div>
+          <ol class="top-list" id="topProducts"></ol>
+        </div>
+      </section>
+
+      <!-- Verlauf -->
+      <section class="panel" id="panel-history" hidden>
+        <div class="segmented segmented-wide" id="historyFilter">
+          <button class="seg active" data-filter="today">Heute</button>
+          <button class="seg" data-filter="week">7 Tage</button>
+          <button class="seg" data-filter="month">30 Tage</button>
+          <button class="seg" data-filter="all">Alle</button>
+        </div>
+        <div id="historyList"></div>
+      </section>
+
+      <!-- Produkte -->
+      <section class="panel" id="panel-products" hidden>
+        <div class="card">
+          <div class="card-head">
+            <h3 id="productFormTitle">Neues Produkt</h3>
+          </div>
+          <form id="productForm" class="product-form" autocomplete="off">
+            <label class="field">
+              <span>Name</span>
+              <input type="text" id="pfName" maxlength="30" placeholder="z. B. Schokoriegel" required>
+            </label>
+            <label class="field">
+              <span>Preis in Euro</span>
+              <input type="text" id="pfPrice" inputmode="decimal" placeholder="0,50" required>
+              <small class="muted" id="pfPricePreview"></small>
+            </label>
+            <label class="field field-wide">
+              <span>Bild (optional)</span>
+              <input type="file" id="pfImage" accept="image/*">
+            </label>
+            <div class="form-buttons field-wide">
+              <button type="button" class="btn btn-quiet" id="pfCancel" hidden>Abbrechen</button>
+              <button type="submit" class="btn btn-go" id="pfSubmit">➕ Hinzufügen</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>Produkte im Kiosk</h3>
+            <span class="muted" id="productCount"></span>
+          </div>
+          <p class="muted small">Die Reihenfolge hier ist auch die Reihenfolge beim Verkauf. Ausgeblendete Produkte sehen die Schüler nicht.</p>
+          <ul class="manage-list" id="manageList"></ul>
+        </div>
+      </section>
+
+      <!-- Einkauf -->
+      <section class="panel" id="panel-shopping" hidden>
+        <div class="card">
+          <div class="card-head">
+            <h3>Was muss eingekauft werden?</h3>
+            <button class="btn btn-quiet btn-sm" id="clearShoppingBtn">Alles abwählen</button>
+          </div>
+          <ul class="shop-list" id="shopList"></ul>
+        </div>
+        <div class="card" id="shoppingCard" hidden>
+          <div class="card-head"><h3>🛍️ Einkaufsliste</h3></div>
+          <pre class="shopping-text" id="shoppingText"></pre>
+          <div class="form-buttons">
+            <button class="btn btn-quiet" id="copyShoppingBtn">📋 Kopieren</button>
+            <button class="btn btn-go" id="printShoppingBtn">🖨️ Drucken</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Einstellungen -->
+      <section class="panel" id="panel-settings" hidden>
+        <div class="card">
+          <div class="card-head"><h3>Hilfen für Schüler</h3></div>
+          <div class="settings-list">
+            <label class="setting"><span><strong>Vorlesen</strong><small>Produkte, Preise und Anweisungen werden vorgelesen.</small></span><input type="checkbox" class="switch" data-setting="speech"></label>
+            <label class="setting"><span><strong>Töne</strong><small>Kurzer Ton bei jedem Antippen.</small></span><input type="checkbox" class="switch" data-setting="sound"></label>
+            <label class="setting"><span><strong>Rückgeld als Bilder</strong><small>Zeigt, welche Münzen und Scheine zurückgegeben werden.</small></span><input type="checkbox" class="switch" data-setting="changeHelp"></label>
+            <label class="setting"><span><strong>Rechenweg zeigen</strong><small>Zeigt beim Rückgeld: bekommen − Preis = Rückgeld.</small></span><input type="checkbox" class="switch" data-setting="showMath"></label>
+            <label class="setting"><span><strong>Preis als Münzen</strong><small>Zeigt unter jedem Produkt passende Münzen.</small></span><input type="checkbox" class="switch" data-setting="priceCoins"></label>
+            <label class="setting"><span><strong>1- und 2-Cent-Münzen</strong><small>Kleine Münzen beim Bezahlen anbieten.</small></span><input type="checkbox" class="switch" data-setting="smallCoins"></label>
+            <label class="setting"><span><strong>Große 50-€-Scheine</strong><small>50-€-Schein beim Bezahlen anbieten.</small></span><input type="checkbox" class="switch" data-setting="bigNotes"></label>
+            <label class="setting"><span><strong>Lob am Ende</strong><small>Kleine Feier nach jedem Verkauf.</small></span><input type="checkbox" class="switch" data-setting="celebrate"></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Darstellung</h3></div>
+          <div class="settings-list">
+            <div class="setting"><span><strong>Bezahlen mit</strong><small>Geldbilder sind am einfachsten.</small></span>
+              <div class="segmented" data-setting-choice="payMode">
+                <button class="seg" data-value="coins">💶 Geldbilder</button>
+                <button class="seg" data-value="keypad">🔢 Zahlenfeld</button>
+              </div>
+            </div>
+            <div class="setting"><span><strong>Textgröße</strong></span>
+              <div class="segmented" data-setting-choice="textSize">
+                <button class="seg" data-value="normal">A</button>
+                <button class="seg" data-value="large">A+</button>
+                <button class="seg" data-value="xlarge">A++</button>
+              </div>
+            </div>
+            <div class="setting"><span><strong>Farben</strong></span>
+              <div class="segmented" data-setting-choice="theme">
+                <button class="seg" data-value="light">☀️ Hell</button>
+                <button class="seg" data-value="dark">🌙 Dunkel</button>
+                <button class="seg" data-value="contrast">◐ Kontrast</button>
+              </div>
+            </div>
+            <div class="setting"><span><strong>Vorlese-Tempo</strong></span>
+              <div class="segmented" data-setting-choice="speechRate">
+                <button class="seg" data-value="0.75">🐢 Langsam</button>
+                <button class="seg" data-value="0.95">Normal</button>
+                <button class="seg" data-value="1.15">🐇 Schnell</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Lehrer-PIN</h3></div>
+          <div class="settings-list">
+            <label class="setting"><span><strong>PIN verlangen</strong><small>Schüler können den Lehrerbereich nur mit PIN öffnen.</small></span><input type="checkbox" class="switch" data-setting="usePin"></label>
+            <div class="setting"><span><strong>PIN ändern</strong><small>4 Ziffern</small></span>
+              <form class="pin-form" id="pinForm">
+                <input type="password" id="newPin" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="••••" aria-label="Neue PIN">
+                <button class="btn btn-quiet btn-sm" type="submit">Speichern</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Daten</h3></div>
+          <p class="muted small">Alle Daten bleiben nur auf diesem Gerät. Mach ab und zu eine Sicherung.</p>
+          <div class="data-buttons">
+            <button class="btn btn-quiet" id="exportBtn">📤 Sicherung speichern</button>
+            <label class="btn btn-quiet" for="importFile">📥 Sicherung laden</label>
+            <input type="file" id="importFile" accept="application/json,.json" hidden>
+            <button class="btn btn-quiet" id="resetProductsBtn">🔄 Standard-Produkte</button>
+            <button class="btn btn-danger" id="clearHistoryBtn">🗑️ Verlauf löschen</button>
+          </div>
+        </div>
+        <p class="credit">Klassenkiosk · von Herr El Makhoukhi</p>
+      </section>
+    </main>
+  </div>
+
+  <!-- ═══════════ DIALOGE ═══════════ -->
+  <dialog id="confirmDialog" class="dialog">
+    <div>
+      <div class="dialog-icon" id="confirmIcon" aria-hidden="true">❓</div>
+      <p class="dialog-text" id="confirmText"></p>
+      <div class="dialog-buttons">
+        <button class="btn btn-quiet btn-lg" id="confirmNo">Nein</button>
+        <button class="btn btn-go btn-lg" id="confirmYes">Ja</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="pinDialog" class="dialog">
+    <div class="dialog-icon" aria-hidden="true">🔒</div>
+    <p class="dialog-text">Lehrer-PIN eingeben</p>
+    <div class="pin-dots" id="pinDots" aria-live="polite"><span></span><span></span><span></span><span></span></div>
+    <div class="pin-keys" id="pinKeys"></div>
+    <button class="btn btn-quiet" id="pinCancel">Abbrechen</button>
+  </dialog>
+
+  <div class="celebrate" id="celebrate" hidden aria-live="assertive">
+    <div class="celebrate-box">
+      <div class="celebrate-icon" id="celebrateIcon">🎉</div>
+      <div class="celebrate-text" id="celebrateText">Super gemacht!</div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="assets/js/kiosk.js"></script>
+</body>
+</html>
